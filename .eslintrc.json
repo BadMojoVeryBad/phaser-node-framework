@@ -11,6 +11,9 @@
     "@typescript-eslint/no-empty-interface": "off",
     "semi": "off",
     "@typescript-eslint/semi": [ "error" ],
-    "quotes": [2, "single", { "avoidEscape": true }]
+    "quotes": [2, "single", { "avoidEscape": true }],
+    "@typescript-eslint/no-explicit-any": "off",
+    "indent": ["error", 2],
+    "space-before-function-paren": ["error", "never"]
   }
 }

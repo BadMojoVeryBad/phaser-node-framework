@@ -3,17 +3,24 @@ import { Container } from 'inversify';
 import 'phaser';
 import { ComponentInterface } from './componentInterface';
 import { Scene } from './scene';
-import { LoadScene } from './scene/loadScene';
+import { LoadScene } from './scenes/loadScene';
+import { InputScene } from './scenes/inputScene';
+import { RegisterControls } from './controls/RegisterControls';
+import { RegisterControlsInterface } from './controls/RegisterControlsInterface';
+import { ControlsInterface } from './controls/ControlsInterface';
+import { Controls } from './controls/Controls';
 
 /**
  * Creates and configures a Phaser game.
  *
- * TODO: Register controls.
+ * TODO: A 'state' or 'store' or 'context' service.
  */
 export class Game {
   private phaser: Phaser.Game;
 
   private scenes: Record<string, typeof Scene> = {};
+
+  private inputs: Record<string, string[]> = {};
 
   private config: Phaser.Types.Core.GameConfig;
 
@@ -34,7 +41,7 @@ export class Game {
    * @param debug Enables physics debugging.
    * @returns A game instance.
    */
-  public static create(width: number, height: number, gravity: number = 0, debug: boolean = false): Game {
+  public static create(width: number, height: number, gravity = 0, debug = false): Game {
     const game = new Game();
 
     // Create phaser game.
@@ -100,7 +107,7 @@ export class Game {
    * @param key A unique key to reference the scene by. This is used when switching scenes.
    * @param scene The scene class.
    */
-  public registerScene(key: string, scene: new (...args: unknown[]) => Scene): void {
+  public registerScene(key: string, scene: new (...args: any[]) => Scene): void {
     if (key === '' || key.charAt(0) === '_') {
       console.error(`Cannot register scene "${key}" as it has no key, or a key that starts with a "_"!`);
       return;
@@ -116,8 +123,12 @@ export class Game {
    * @param key A unique key to reference the service with. This is used when injecting the service.
    * @param object The class to register.
    */
-  public registerService<I>(key: string, object: new (...args: unknown[]) => I): void {
-    this.serviceContainer.bind<I>(key).to(object);
+  public registerService<I>(key: string, object: new (...args: any[]) => I, isSingleton = false): void {
+    if (isSingleton) {
+      this.serviceContainer.bind<I>(key).to(object).inSingletonScope();
+    } else {
+      this.serviceContainer.bind<I>(key).to(object);
+    }
   }
 
   /**
@@ -132,7 +143,7 @@ export class Game {
    * @param path The path to the file.
    * @param path2 The second path, if registering a texture atlas.
    */
-  public registerAsset(key: string, path: string, path2: string = ''): void {
+  public registerAsset(key: string, path: string, path2 = ''): void {
     const extension = path.split('.').pop();
     if (!extension) {
       console.error(`Could not load asset "${key}" as the specified path has no extension: "${path}".`);
@@ -149,6 +160,10 @@ export class Game {
       path,
       path2
     });
+  }
+
+  public registerControl(control: string, ...inputs: string[]): void {
+    this.inputs[control] = inputs;
   }
 
   /**
@@ -168,6 +183,15 @@ export class Game {
       }
       this.phaser.scene.add(key, this.scenes[key]);
     }
+
+    // Register framework services.
+    this.registerService<RegisterControlsInterface>('_registerControls', RegisterControls, true);
+    this.registerService<ControlsInterface>('controls', Controls);
+
+    // Add input scene.
+    const controls = this.serviceContainer.get<RegisterControlsInterface>('_registerControls');
+    this.phaser.scene.add('_input', InputScene);
+    this.phaser.scene.start('_input', { controls, inputs: this.inputs });
 
     // Make sure we can access the service container.
     this.phaser.registry.set('_serviceContainer', this.serviceContainer);

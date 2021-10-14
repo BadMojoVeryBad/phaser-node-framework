@@ -1,27 +1,26 @@
-import { Container } from 'inversify';
 import { Scene } from '../scene';
 
 type Asset = {
   key: string,
   path: string,
   path2: string
-}
+};
 
 export class LoadScene extends Scene {
   private assets: Array<Asset>;
 
   private nextScene: string;
 
-  constructor () {
+  constructor() {
     super('_load');
   }
 
-  init (data: { assets: Array<Asset>, nextScene: string }): void {
+  init(data: { assets: Array<Asset>, nextScene: string }): void {
     this.assets = data.assets;
     this.nextScene = data.nextScene;
   }
 
-  preload (): void {
+  preload(): void {
     // Load assets based on type.
     for (const asset of this.assets) {
       const extension = asset.path.split('.').pop();
@@ -32,7 +31,7 @@ export class LoadScene extends Scene {
           atlasURL: asset.path2
         });
       } else if (extension === 'png') {
-        this.load.image(asset.key, asset.path)
+        this.load.image(asset.key, asset.path);
       } else if (extension === 'ogg') {
         this.load.audio(asset.key, asset.path);
       } else if (extension === 'json') {

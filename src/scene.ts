@@ -88,29 +88,29 @@ export abstract class Scene extends Phaser.Scene {
 
   private updateComponent(component: ComponentInterface, hook: Hook, time = 0, delta = 0) {
     switch (hook as Hook) {
-      case Hook.BEFORE_CREATE:
-        component.beforeCreate();
-        break;
+    case Hook.BEFORE_CREATE:
+      component.beforeCreate();
+      break;
 
-      case Hook.CREATE:
-        component.create();
-        break;
+    case Hook.CREATE:
+      component.create();
+      break;
 
-      case Hook.AFTER_CREATE:
-        component.afterCreate();
-        break;
+    case Hook.AFTER_CREATE:
+      component.afterCreate();
+      break;
 
-      case Hook.BEFORE_UPDATE:
-        component.beforeUpdate(time, delta);
-        break;
+    case Hook.BEFORE_UPDATE:
+      component.beforeUpdate(time, delta);
+      break;
 
-      case Hook.UPDATE:
-        component.update(time, delta);
-        break;
+    case Hook.UPDATE:
+      component.update(time, delta);
+      break;
 
-      case Hook.AFTER_UPDATE:
-        component.afterUpdate(time, delta);
-        break;
+    case Hook.AFTER_UPDATE:
+      component.afterUpdate(time, delta);
+      break;
     }
   }
 }
