@@ -19,18 +19,18 @@ export class InputScene extends Scene {
 
         if (inputType === 'Keyboard') {
           if (!inputCode || isNaN(Number.parseInt(inputCode))) {
-            console.error(`Invalid input code "${inputCode}" for input type "${inputType}".`);
+            throw Error(`Invalid input code "${inputCode}" for input type "${inputType}".`);
           } else {
             inputObjects.push(new KeyboardInput(this, Number.parseInt(inputCode)));
           }
         } else if (inputType === 'Gamepad') {
           if (!inputCode || (<any>GamepadButton)[inputCode] === undefined) {
-            console.error(`Invalid input code "${inputCode}" for input type "${inputType}".`);
+            throw Error(`Invalid input code "${inputCode}" for input type "${inputType}".`);
           } else {
             inputObjects.push(new GamepadInput(this, Gamepad.ONE, (<any>GamepadButton)[inputCode]));
           }
         } else {
-          console.error(`Invalid input type "${inputType}". Valid types are "Keyboard" and "Gamepad".`);
+          throw Error(`Invalid input type "${inputType}". Valid types are "Keyboard" and "Gamepad".`);
         }
       }
 

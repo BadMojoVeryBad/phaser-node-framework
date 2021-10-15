@@ -9,7 +9,7 @@ import { Scene } from './scene';
 export abstract class Component implements ComponentInterface {
   protected scene: Scene;
 
-  public init(data?: Map<string, unknown>): void { // eslint-disable-line @typescript-eslint/no-unused-vars
+  public init(data?: Record<string, unknown>): void { // eslint-disable-line @typescript-eslint/no-unused-vars
     // To be overridden.
   }
 

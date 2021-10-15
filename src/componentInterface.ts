@@ -9,7 +9,7 @@ export interface ComponentInterface {
    * This means all dependencies will be resolved, but the actual phaser
    * logic wont have started yet.
    */
-  init(data?: Map<string, unknown>): void;
+  init(data?: Record<string, unknown>): void;
 
   /**
    * Called during the scene's `create()` method, before all other components

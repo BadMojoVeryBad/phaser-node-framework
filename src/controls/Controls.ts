@@ -10,8 +10,8 @@ export class Controls implements ControlsInterface {
   constructor(@inject('_registerControls') private controls: RegisterControlsInterface) { }
 
   /**
-     * @inheritdoc
-     */
+   * @inheritdoc
+   */
   public isActive(control: string): number {
     return this.controls.isActive(control);
   }

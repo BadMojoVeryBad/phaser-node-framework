@@ -1095,11 +1095,6 @@ to-regex-range@^5.0.1:
   dependencies:
     is-number "^7.0.0"
 
-ts-key-enum@^2.0.8:
-  version "2.0.8"
-  resolved "https://registry.yarnpkg.com/ts-key-enum/-/ts-key-enum-2.0.8.tgz#ff83012837e3e7f999eee84dba1a1dcb8c66fbeb"
-  integrity sha512-ccRzCVr98faP5pKYpX0IlrPvf2VcepEFSH115CWti0eM1anh774ndXf0RlBOFecTuM103gMwaHSo0tDPlQnyNQ==
-
 ts-loader@^8.0.11:
   version "8.3.0"
   resolved "https://registry.yarnpkg.com/ts-loader/-/ts-loader-8.3.0.tgz#83360496d6f8004fab35825279132c93412edf33"

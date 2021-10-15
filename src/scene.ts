@@ -36,7 +36,7 @@ export abstract class Scene extends Phaser.Scene {
    * @param key The unique key of the component to add.
    * @param data Any data to be passed to the component's `init()` method.
    */
-  public addComponent(key: string, data?: Map<string, unknown>): void {
+  public addComponent(key: string, data?: Record<string, unknown>): void {
     const serviceContainer = this.registry.get('_serviceContainer') as Container;
     const component = serviceContainer.get<ComponentInterface>(key);
     component.setScene(this);
@@ -56,6 +56,20 @@ export abstract class Scene extends Phaser.Scene {
    */
   public update(time: number, delta: number): void {
     this.updateComponents(time, delta);
+  }
+
+  /**
+   * Get the width of the game.
+   */
+  public width(): number {
+    return this.game.canvas.width;
+  }
+
+  /**
+   * Get the height of the game.
+   */
+  public height(): number {
+    return this.game.canvas.height;
   }
 
   private createComponents(): void {

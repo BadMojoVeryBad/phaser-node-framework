@@ -12,8 +12,6 @@ import { Controls } from './controls/Controls';
 
 /**
  * Creates and configures a Phaser game.
- *
- * TODO: A 'state' or 'store' or 'context' service.
  */
 export class Game {
   private phaser: Phaser.Game;
@@ -25,6 +23,24 @@ export class Game {
   private config: Phaser.Types.Core.GameConfig;
 
   private serviceContainer: Container;
+
+  private keys: string[] = [];
+
+  private isStarted = false;
+
+  private static options = {
+    debug: false,
+    gravity: 0,
+    backgroundColor: 0x000000,
+    loadingColor: 0xffffff
+  };
+
+  private options = {
+    debug: false,
+    gravity: 0,
+    backgroundColor: 0x000000,
+    loadingColor: 0xffffff
+  };
 
   private assets: Array<{
     key: string,
@@ -41,13 +57,23 @@ export class Game {
    * @param debug Enables physics debugging.
    * @returns A game instance.
    */
-  public static create(width: number, height: number, gravity = 0, debug = false): Game {
+  public static create(width: number, height: number, options?: {
+    debug?: boolean,
+    gravity?: number,
+    backgroundColor?: number,
+    loadingColor?: number
+  }): Game {
     const game = new Game();
+
+    let optionsMerged = Game.options;
+    if (options) {
+      optionsMerged = { ...optionsMerged, ...options };
+    }
 
     // Create phaser game.
     game.config = {
       type: Phaser.WEBGL,
-      backgroundColor: '#000000',
+      backgroundColor: optionsMerged.backgroundColor,
       width: width,
       height: height,
       pixelArt: true,
@@ -58,12 +84,12 @@ export class Game {
       physics: {
         default: 'arcade',
         arcade: {
-          // TODO: Make sure this is a power of two.
-          tileBias: width / 20,
+          // Make sure this is a power of two.
+          tileBias: Math.pow(2, Math.round(Math.log(width / 20) / Math.log(2))),
           gravity: {
-            y: gravity
+            y: optionsMerged.gravity
           },
-          debug: debug
+          debug: optionsMerged.debug
         },
       },
       callbacks: {
@@ -73,6 +99,8 @@ export class Game {
         }
       }
     };
+
+    game.options = optionsMerged;
 
     // Register load scene.
     game.scenes['_load'] = LoadScene;
@@ -86,44 +114,34 @@ export class Game {
   /**
    * Registers a component for use in the game.
    *
-   * TODO: Make sure key is unique.
-   *
    * @param key A unique key to reference the component by. This is used when adding components to a scene.
    * @param component The component class.
    */
   public registerComponent(key: string, component: new (...args: unknown[]) => ComponentInterface): void {
-    if (key === '' || key.charAt(0) === '_') {
-      console.error(`Cannot register component "${key}" as it has no key, or a key that starts with a "_"!`);
-      return;
-    }
-    this.registerService<ComponentInterface>(key, component);
+    this.validateKey(key, 'component');
+    this.serviceContainer.bind<ComponentInterface>(key).to(component);
   }
 
   /**
    * Registers a scene for use in the game.
    *
-   * TODO: Make sure key is unique.
-   *
    * @param key A unique key to reference the scene by. This is used when switching scenes.
    * @param scene The scene class.
    */
   public registerScene(key: string, scene: new (...args: any[]) => Scene): void {
-    if (key === '' || key.charAt(0) === '_') {
-      console.error(`Cannot register scene "${key}" as it has no key, or a key that starts with a "_"!`);
-      return;
-    }
+    this.validateKey(key, 'scene');
     this.scenes[key] = scene;
   }
 
   /**
    * Registers an arbitrary class in the service container so it can be automatically injected into your components.
    *
-   * TODO: Make sure key is unique.
-   *
    * @param key A unique key to reference the service with. This is used when injecting the service.
    * @param object The class to register.
    */
   public registerService<I>(key: string, object: new (...args: any[]) => I, isSingleton = false): void {
+    this.validateKey(key, 'service');
+
     if (isSingleton) {
       this.serviceContainer.bind<I>(key).to(object).inSingletonScope();
     } else {
@@ -137,22 +155,20 @@ export class Game {
    *
    * These assets will automatically be loaded when the game starts.
    *
-   * TODO: Make sure key is unique.
-   *
    * @param key A unique key to reference the asset.
    * @param path The path to the file.
    * @param path2 The second path, if registering a texture atlas.
    */
   public registerAsset(key: string, path: string, path2 = ''): void {
+    this.validateKey(key, 'asset');
+
     const extension = path.split('.').pop();
     if (!extension) {
-      console.error(`Could not load asset "${key}" as the specified path has no extension: "${path}".`);
-      return;
+      throw Error(`Could not load asset "${key}" as the specified path has no extension: "${path}".`);
     }
 
     if (!['png', 'json', 'ogg'].includes(extension)) {
-      console.error(`Could not load asset "${key}" as the asset is not a supported type: "png", "json", or "ogg".`);
-      return;
+      throw Error(`Could not load asset "${key}" as the asset is not a supported type: "png", "json", or "ogg".`);
     }
 
     this.assets.push({
@@ -162,16 +178,62 @@ export class Game {
     });
   }
 
+  /**
+   * Listens for inputs on a given control.
+   *
+   * The control string is arbitrary, and is cimply used to reference the inputs later,
+   *
+   * An input string is an input type and an input code, seperated by a dot. The input
+   * types can be "Keyboard" or "Gamepad". Valid keyboard input codes are JavaScript
+   * keyboard code, as shown here: https://keycode.info/. Valid gamepad input codes are:
+   * * A
+   * * B
+   * * X
+   * * Y
+   * * L1
+   * * R1
+   * * L2
+   * * R2
+   * * SELECT
+   * * START
+   * * STICK_LEFT
+   * * STICK_RIGHT
+   * * UP
+   * * DOWN
+   * * LEFT
+   * * RIGHT
+   * * VENDOR_1 (The 'PS Button' or 'Xbox Home' button)
+   * * VENDOR_2 (The Dualshock4's touch panel thing)
+   * * STICK_LEFT_UP
+   * * STICK_LEFT_DOWN
+   * * STICK_LEFT_LEFT
+   * * STICK_LEFT_RIGHT
+   * * STICK_RIGHT_UP
+   * * STICK_RIGHT_DOWN
+   * * STICK_RIGHT_LEFT
+   * * STICK_RIGHT_RIGHT
+   *
+   * Valid input string examples are:
+   * * "Keyboard.38" (The up arrow key)
+   * * "Gamepad.R2" (The R2 button)
+   *
+   * @param control An arbitrary string representing a control. For example, you could
+   *    name a control 'UP', and listen for inputs on the up arrow key, as well as the
+   *    'w' key.
+   * @param inputs The inputs to listen for on this control.
+   */
   public registerControl(control: string, ...inputs: string[]): void {
     this.inputs[control] = inputs;
   }
 
   /**
    * Starts the game.
-   *
-   * TODO: Add error handling to prevent registering stuff after the game has started.
    */
   public start(): void {
+    if (this.isStarted) {
+      throw new Error('Cannot start the game twice!');
+    }
+
     // Create the game.
     this.phaser = new Phaser.Game(this.config);
 
@@ -185,7 +247,7 @@ export class Game {
     }
 
     // Register framework services.
-    this.registerService<RegisterControlsInterface>('_registerControls', RegisterControls, true);
+    this.serviceContainer.bind<RegisterControlsInterface>('_registerControls').to(RegisterControls).inSingletonScope();
     this.registerService<ControlsInterface>('controls', Controls);
 
     // Add input scene.
@@ -199,7 +261,27 @@ export class Game {
     // Start the first scene.
     this.phaser.scene.start('_load', {
       assets: this.assets,
-      nextScene
+      nextScene,
+      loadingColor: this.options.loadingColor
     });
+
+    // Set flag.
+    this.isStarted = true;
+  }
+
+  private validateKey(key: string, type = 'thing') {
+    if (this.isStarted) {
+      throw new Error(`Cannot register ${type} with key ${key} as the game has already been started. Register your ${type} before calling the "start()" method.`);
+    }
+
+    if (this.keys.includes(key)) {
+      throw Error(`Cannot register ${type} in game as the key "${key}" is already in use!`);
+    }
+
+    if (key === '' || key.charAt(0) === '_') {
+      throw Error(`Cannot register ${type} in game as the key "${key}" is invalid! It cannot be an empty string or start with an underscore.`);
+    }
+
+    this.keys.push(key);
   }
 }
