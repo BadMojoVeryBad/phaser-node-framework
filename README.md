@@ -1,5 +1,5 @@
 # Haydn's Phaser Component Framework
-A small wrapper around Phaser 3 that I use to make video games. It's pretty naive and "thrown together", but it does what I need it to for now. It contains abstractions for scenes, components, loading assets, and dependency injection.
+A small wrapper around Phaser 3 that I use to make video games. It's pretty naive and "thrown together" and I wouldn't suggest distributing it, but it does what I need it to for now. It contains abstractions for scenes, components, loading assets, and dependency injection.
 
 ## Prerequisites
 * Yarn ^1.22.3
@@ -79,7 +79,7 @@ export class DefaultScene extends Scene {
 ```
 
 #### A Note About Scenes
-In this framework, we don't use the `create()` and `update()` methods on scenes. In fact, if you implement them then components will not work. We instead put or create and update logic in components, which are discussed next.
+In this framework, we don't use the `create()` and `update()` methods on scenes. In fact, if you implement them then components will not work. We instead put our create and update logic in components, which are discussed next.
 
 ### Components
 Components are a way of splitting the large amount of logic in scenes into little bits. Components can be considered as "pieces of a scene".
@@ -206,7 +206,7 @@ export class PlayerComponent extends Component {
 Assets can be `.png` files for images, `.ogg` files for audio, and `.json` filed for tiled map editor maps. There is also a special case where if you pass two paths to the `registerAsset()` method, it will load the asset as a texture atlas.
 
 ### Controls
-Controls are annoying to configure, so this framework has an abstraction for to. To register a control, call the `registerControl()` method:
+Controls are annoying to configure, so this framework has an abstraction for that. To register a control, call the `registerControl()` method:
 
 ``` ts
 ...
@@ -239,7 +239,7 @@ export class PlayerComponent extends Component {
 }
 ```
 
-Now if the up arrow jey OR up on the gamepad button are pressed, `isActive()` be truth-ey.
+Now if the up arrow key OR up on the gamepad button are pressed, `isActive()` be truth-ey.
 
 ### Custom Services
 Finally, if we write any custom service we want to `inject()` into our components, we can register them like so:
