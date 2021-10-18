@@ -48,6 +48,15 @@ export class Game {
     path2: string
   }> = [];
 
+  private animations: Array<{
+    texture: string,
+    frame: string,
+    start: number,
+    end: number,
+    repeat: boolean,
+    fps: number
+  }> = [];
+
   /**
    * Creates an instance of the game.
    *
@@ -227,6 +236,29 @@ export class Game {
   }
 
   /**
+   * Registers an animation in Phaser using the supplied texture atlas and frame. All animations have a no zero-padding.
+   *
+   * @param texture The key of a texture atlas you loaded using registerAsset().
+   * @param frame The frame name of the images within the atlas.
+   * @param start The start frame.
+   * @param end The end frame.
+   * @param repeat If the animation repeats.
+   * @param fps The frame rate.
+   */
+  public registerAnimation(texture: string, frame: string, start: number, end: number, repeat = true, fps = 12): void {
+    this.validateKey(frame, 'asset');
+
+    this.animations.push({
+      texture,
+      frame,
+      start,
+      end,
+      repeat,
+      fps
+    });
+  }
+
+  /**
    * Starts the game.
    */
   public start(): void {
@@ -261,6 +293,7 @@ export class Game {
     // Start the first scene.
     this.phaser.scene.start('_load', {
       assets: this.assets,
+      animations: this.animations,
       nextScene,
       loadingColor: this.options.loadingColor
     });

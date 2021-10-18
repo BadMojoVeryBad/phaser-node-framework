@@ -6,8 +6,19 @@ type Asset = {
   path2: string
 };
 
+type Animation = {
+  texture: string,
+  frame: string,
+  start: number,
+  end: number,
+  repeat: boolean,
+  fps: number
+};
+
 export class LoadScene extends Scene {
   private assets: Array<Asset>;
+
+  private animations: Array<Animation>;
 
   private nextScene: string;
 
@@ -17,8 +28,9 @@ export class LoadScene extends Scene {
     super('_load');
   }
 
-  init(data: { assets: Array<Asset>, nextScene: string, loadingColor: number }): void {
+  init(data: { assets: Array<Asset>, animations: Array<Animation>, nextScene: string, loadingColor: number }): void {
     this.assets = data.assets;
+    this.animations = data.animations;
     this.nextScene = data.nextScene;
     this.loadingColor = data.loadingColor;
   }
@@ -68,5 +80,17 @@ export class LoadScene extends Scene {
         this.changeScene(this.nextScene);
       }
     });
+  }
+
+  public create(): void {
+    for (const animation of this.animations) {
+      const key = animation.frame ? animation.frame : animation.texture;
+      this.anims.create({
+        key: key,
+        frames: this.anims.generateFrameNames(animation.texture, { prefix: key, start: animation.start, end: animation.end, zeroPad: 0 }),
+        frameRate: animation.fps,
+        repeat: animation.repeat ? -1 : 0,
+      });
+    }
   }
 }
