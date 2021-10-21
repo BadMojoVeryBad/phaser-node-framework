@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { Container } from 'inversify';
 import 'phaser';
-import { ComponentInterface } from './componentInterface';
+import { NodeInterface } from './nodeInterface';
 import { Scene } from './scene';
 import { LoadScene } from './scenes/loadScene';
 import { InputScene } from './scenes/inputScene';
@@ -126,9 +126,9 @@ export class Game {
    * @param key A unique key to reference the component by. This is used when adding components to a scene.
    * @param component The component class.
    */
-  public registerComponent(key: string, component: new (...args: unknown[]) => ComponentInterface): void {
+  public registerNode(key: string, component: new (...args: unknown[]) => NodeInterface): void {
     this.validateKey(key, 'component');
-    this.serviceContainer.bind<ComponentInterface>(key).to(component);
+    this.serviceContainer.bind<NodeInterface>(key).to(component);
   }
 
   /**
