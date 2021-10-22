@@ -1,5 +1,5 @@
 {
-  "name": "phaser-component-framework",
+  "name": "phaser-node-framework",
   "version": "0.0.0",
   "description": "A basic component framework for Phaser 3.",
   "main": "dist/framework.js",

@@ -1,5 +1,5 @@
 import { Container } from 'inversify';
-import { ComponentInterface } from './componentInterface';
+import { NodeInterface } from './nodeInterface';
 
 enum Hook {
   BEFORE_CREATE,
@@ -11,13 +11,34 @@ enum Hook {
 }
 
 /**
- * A Phaser scene extension that allows the use of components.
+ * A Phaser scene extension that allows the use of nodes.
  */
-export abstract class Scene extends Phaser.Scene {
-  private components: Array<ComponentInterface> = [];
+export abstract class Scene extends Phaser.Scene implements NodeInterface {
+  private nodes: Array<NodeInterface> = [];
+  private created = false;
 
   constructor(config: string | Phaser.Types.Scenes.SettingsConfig) {
     super(config);
+  }
+
+  public init(data?: Record<string, unknown>): void { // eslint-disable-line @typescript-eslint/no-unused-vars
+    // ...to be overridden.
+  }
+
+  public getChildren(): Array<NodeInterface> {
+    return this.nodes;
+  }
+
+  public getParent(): NodeInterface|null {
+    return null;
+  }
+
+  public setScene(): void {
+    // ...
+  }
+
+  public remove(): void {
+    this.scene.stop();
   }
 
   /**
@@ -26,36 +47,75 @@ export abstract class Scene extends Phaser.Scene {
    * @param key The unique key of the scene to change to.
    */
   public changeScene(key: string): void {
-    this.components = [];
+    this.nodes = [];
     this.scene.start(key);
   }
 
   /**
-   * Adds a component to the scene.
+   * Creates a node instance, but does not add it to the node tree.
    *
-   * @param key The unique key of the component to add.
-   * @param data Any data to be passed to the component's `init()` method.
+   * @param key The key of the node to add.
+   * @param data Any data to be passed to the node's `init()` method.
    */
-  public addComponent(key: string, data?: Record<string, unknown>): void {
+  public createNode(key: string, data?: Record<string, unknown>): NodeInterface {
+    // Get a node instance.
     const serviceContainer = this.registry.get('_serviceContainer') as Container;
-    const component = serviceContainer.get<ComponentInterface>(key);
-    component.setScene(this);
-    component.init(data);
-    this.components.push(component);
+    const node = serviceContainer.get<NodeInterface>(key);
+
+    // Initialise it.
+    node.setScene(this);
+    node.init(data);
+
+    // Run creation hooks if the scene is already ceated.
+    if (this.created) {
+      this.updateNode(node, Hook.CREATE);
+    }
+
+    return node;
+  }
+
+  public addNode(key: string, data?: Record<string, unknown>): void {
+    const node = this.createNode(key, data);
+
+    // Add it to node tree.
+    this.nodes.push(node);
   }
 
   /**
-   * Don't override this method. If you do, components will stop working!
+   * The scene's create method. If you override this method, be sure to call the
+   * `super()`:
+   *
+   * ```
+   * public create(): void {
+   *   super.create();
+   * }
+   * ```
    */
   public create(): void {
-    this.createComponents();
+    for (const child of this.getChildren()) {
+      this.updateNode(child, Hook.CREATE);
+    }
+    this.created = true;
   }
 
   /**
-   * Don't override this method. If you do, components will stop working!
+   * The scene's update method. If you override this method, be sure to call the
+   * `super()`:
+   *
+   * ```
+   * public update(time: number, delta: number): void {
+   *   super.update(time: number, delta: number);
+   * }
+   * ```
    */
   public update(time: number, delta: number): void {
-    this.updateComponents(time, delta);
+    for (const child of this.getChildren()) {
+      this.updateNode(child, Hook.UPDATE, time, delta);
+    }
+  }
+
+  public destroy(): void {
+    this.remove();
   }
 
   /**
@@ -72,59 +132,28 @@ export abstract class Scene extends Phaser.Scene {
     return this.game.canvas.height;
   }
 
-  private createComponents(): void {
-    for (const component of this.components) {
-      this.updateComponent(component, Hook.BEFORE_CREATE);
-    }
-
-    for (const component of this.components) {
-      this.updateComponent(component, Hook.CREATE);
-    }
-
-    for (const component of this.components) {
-      this.updateComponent(component, Hook.AFTER_CREATE);
-    }
+  /**
+   * Has the scene's created() method been run?
+   *
+   * @returns
+   */
+  public isCreated(): boolean {
+    return this.created;
   }
 
-  private updateComponents(time: number, delta: number): void {
-    for (const component of this.components) {
-      this.updateComponent(component, Hook.BEFORE_UPDATE, time, delta);
-    }
-
-    for (const component of this.components) {
-      this.updateComponent(component, Hook.UPDATE, time, delta);
-    }
-
-    for (const component of this.components) {
-      this.updateComponent(component, Hook.AFTER_UPDATE, time, delta);
-    }
-  }
-
-  private updateComponent(component: ComponentInterface, hook: Hook, time = 0, delta = 0) {
+  private updateNode(node: NodeInterface, hook: Hook, time = 0, delta = 0) {
     switch (hook as Hook) {
-    case Hook.BEFORE_CREATE:
-      component.beforeCreate();
-      break;
-
     case Hook.CREATE:
-      component.create();
-      break;
-
-    case Hook.AFTER_CREATE:
-      component.afterCreate();
-      break;
-
-    case Hook.BEFORE_UPDATE:
-      component.beforeUpdate(time, delta);
+      node.create();
       break;
 
     case Hook.UPDATE:
-      component.update(time, delta);
+      node.update(time, delta);
       break;
+    }
 
-    case Hook.AFTER_UPDATE:
-      component.afterUpdate(time, delta);
-      break;
+    for (const child of node.getChildren()) {
+      this.updateNode(child, hook, time, delta);
     }
   }
 }

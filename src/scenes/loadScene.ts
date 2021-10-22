@@ -36,6 +36,11 @@ export class LoadScene extends Scene {
   }
 
   preload(): void {
+    // If no assets, go to next scene.
+    if (!this.assets.length) {
+      this.changeScene(this.nextScene);
+    }
+
     // Load assets based on type.
     for (const asset of this.assets) {
       const extension = asset.path.split('.').pop();

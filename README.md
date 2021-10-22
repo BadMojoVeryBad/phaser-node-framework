@@ -1,5 +1,5 @@
-# Haydn's Phaser Component Framework
-A small wrapper around Phaser 3 that I use to make video games. It's pretty naive and "thrown together" and I wouldn't suggest distributing it, but it does what I need it to for now. It contains abstractions for scenes, components, loading assets, and dependency injection.
+# Haydn's Phaser Node Framework
+A small wrapper around Phaser 3 that I use to make video games. All it really does is split game logic into 'nodes', instead of putting it all in one huge scene.
 
 ## Prerequisites
 * Yarn ^1.22.3
@@ -9,7 +9,7 @@ A small wrapper around Phaser 3 that I use to make video games. It's pretty naiv
 ## Install
 Install into your project with yarn:
 ``` sh
-yarn add https://github.com/BadMojoVeryBad/phaser-component-framework.git#master
+yarn add https://github.com/BadMojoVeryBad/phaser-node-framework.git#master
 ```
 
 You will also need to install the `reflect-metadata` package to get dependency injection to work:
@@ -25,7 +25,7 @@ To create a game, we use the `Game` class:
 
 ``` ts
 import 'reflect-metadata';
-import { Game } from 'phaser-component-framework';
+import { Game } from 'phaser-node-framework';
 
 // Create a game that is 1280x720 pixels.
 const game = Game.create(1280, 720);
@@ -42,7 +42,7 @@ This will start a game with the specified dimensions! Note that we have to impor
 To add scenes to the game, create them by extending the `Scene` class:
 
 ``` ts
-import { Scene } from 'phaser-component-framework';
+import { Scene } from 'phaser-node-framework';
 
 export class DefaultScene extends Scene {
   public init(): void {
@@ -69,7 +69,7 @@ This will run the scene immediately after loading is complete. The first registe
 In this framework, we only run one scene at a time. To switch scenes, call the `changeScene()` method with the key you registered the scene with:
 
 ``` ts
-import { Scene } from 'phaser-component-framework';
+import { Scene } from 'phaser-node-framework';
 
 export class DefaultScene extends Scene {
   public init(): void {
@@ -79,19 +79,19 @@ export class DefaultScene extends Scene {
 ```
 
 #### A Note About Scenes
-In this framework, we don't use the `create()` and `update()` methods on scenes. In fact, if you implement them then components will not work. We instead put our create and update logic in components, which are discussed next.
+In this framework, we (usually) don't use the `create()` and `update()` methods on scenes. We instead put our create and update logic in child nodes, which are discussed next.
 
-### Components
-Components are a way of splitting the large amount of logic in scenes into little bits. Components can be considered as "pieces of a scene".
+### Nodes
+Nodes are a way of splitting the large amount of logic in scenes into little bits. Nodes can be considered as "pieces of a scene".
 
-#### Adding Components to the Game
-We can create a component like so:
+#### Adding a Node to the Game
+We can create a node like so:
 
 ``` ts
-import { Component, injectable } from 'phaser-component-framework';
+import { Node, injectable } from 'phaser-node-framework';
 
 @injectable()
-export class PlayerComponent extends Component {
+export class PlayerNode extends Node {
   public create(): void {
     // Equivelant to the scene's create() method.
     // To access the scene:
@@ -100,6 +100,10 @@ export class PlayerComponent extends Component {
 
   public update(time: number, delta: number): void {
     // Equivelant to the scene's update() method.
+  }
+
+  public destroy(): void {
+    // Remove any game objects and event listeners here.
   }
 }
 ```
@@ -112,7 +116,7 @@ const game = Game.create(1280, 720);
 
 game.registerScene('default', DefaultScene);
 
-game.registerComponent('player', PlayerComponent);
+game.registerNode('player', PlayerNode);
 
 // Start game.
 game.start();
@@ -121,25 +125,25 @@ game.start();
 Then add it to any scene we like, in the `init()` method:
 
 ``` ts
-import { Scene } from 'phaser-component-framework';
+import { Scene } from 'phaser-node-framework';
 
 export class DefaultScene extends Scene {
   public init(): void {
-    this.addComponent('player');
+    this.addNode('player');
   }
 }
 ```
 
-#### Init Data for Components
-Data can be passed to a component through the component's `init()` method, like so:
+#### Init Data for Nodes
+Data can be passed to a node through the node's `init()` method, like so:
 
 ``` ts
-import { Scene } from 'phaser-component-framework';
+import { Scene } from 'phaser-node-framework';
 
 export class DefaultScene extends Scene {
   public init(): void {
     // Pass in data.
-    this.addComponent('player', {
+    this.addNode('player', {
       'someData': true
     });
   }
@@ -147,31 +151,34 @@ export class DefaultScene extends Scene {
 ```
 
 ``` ts
-import { Component, injectable } from 'phaser-component-framework';
+import { Node, injectable } from 'phaser-node-framework';
 
 @injectable()
-export class PlayerComponent extends Component {
+export class PlayerNode extends Node {
   public init(data: Record<string, unknown>): void {
-    // Get the data in the component.
+    // Get the data in the node.
     console.log(data.someData);
   }
 }
 ```
 
-#### Dependency Injection in Components
-Components are created using a service container, which means we can inject services into their contructor:
+#### Dependency Injection in Nodes
+Nodes are created using a service container, which means we can inject services into their contructor:
 
 ``` ts
-import { Component, injectable, inject } from 'phaser-component-framework';
+import { Node, injectable, inject } from 'phaser-node-framework';
 
 @injectable()
-export class PlayerComponent extends Component {
+export class PlayerNode extends Node {
   // The controls interface is explained in the 'Controls' section.
   constructor(@inject('controls') private controls: ControlsInterface) {
     super();
   }
 }
 ```
+
+#### Removing a Node From the Scene
+To remove a node, call it's `remove()` method. This will remove the node as well as any child nodes. It also calls the node's (and all child nodes') `destroy()` method, which will destroy all game objects and event listeners for those nodes.
 
 ### Assets
 This framework automatically handles loading assets. To register an asset for loading, we call `registerAsset()`:
@@ -182,7 +189,7 @@ const game = Game.create(1280, 720);
 
 game.registerScene('default', DefaultScene);
 
-game.registerComponent('player', PlayerComponent);
+game.registerNode('player', PlayerNode);
 
 game.registerAsset('playerSprite', 'assets/playerSprite.png');
 
@@ -190,13 +197,13 @@ game.registerAsset('playerSprite', 'assets/playerSprite.png');
 game.start();
 ```
 
-It will be automatically loaded, and available for us to use in components:
+It will be automatically loaded, and available for us to use in nodes:
 
 ``` ts
-import { Component, injectable } from 'phaser-component-framework';
+import { Node, injectable } from 'phaser-node-framework';
 
 @injectable()
-export class PlayerComponent extends Component {
+export class PlayerNode extends Node {
   public create(): void {
     this.scene.add.image(this.scene.width() / 2, this.scene.height() / 2, 'playerSprite').setScale(0.25);
   }
@@ -212,7 +219,7 @@ Controls are annoying to configure, so this framework has an abstraction for tha
 ...
 const game = Game.create(1280, 720);
 
-// Register scenes and components and assets here.
+// Register scenes and nodes and assets here.
 // ...
 
 // Control:
@@ -222,13 +229,13 @@ game.registerControl('UP', 'Keyboard.38', 'Gamepad.UP');
 game.start();
 ```
 
-As you can see, we're mapping the string 'UP', to the up arrow key on the keyboard (keycode 38), and the up button on a gamepad. Now in our components, we can use the `ControlsInterface` to check in this control is active:
+As you can see, we're mapping the string 'UP', to the up arrow key on the keyboard (keycode 38), and the up button on a gamepad. Now in our nodes, we can use the `ControlsInterface` to check in this control is active:
 
 ``` ts
-import { Component, injectable, inject } from 'phaser-component-framework';
+import { Node, injectable, inject } from 'phaser-node-framework';
 
 @injectable()
-export class PlayerComponent extends Component {
+export class PlayerNode extends Node {
   constructor(@inject('controls') private controls: ControlsInterface) {
     super();
   }
@@ -242,13 +249,13 @@ export class PlayerComponent extends Component {
 Now if the up arrow key OR up on the gamepad button are pressed, `isActive()` be truth-ey.
 
 ### Custom Services
-Finally, if we write any custom service we want to `inject()` into our components, we can register them like so:
+Finally, if we write any custom service we want to `inject()` into our nodes, we can register them like so:
 
 ``` ts
 ...
 const game = Game.create(1280, 720);
 
-// Register scenes, components, assets, and controls here.
+// Register scenes, nodes, assets, and controls here.
 // ...
 
 // Service:
@@ -258,13 +265,13 @@ game.registerService<ExampleServiceInterface>('example', ExampleService);
 game.start();
 ```
 
-Now we can inject the `ExampleService` into components:
+Now we can inject the `ExampleService` into nodes:
 
 ``` ts
-import { Component, injectable, inject } from 'phaser-component-framework';
+import { Node, injectable, inject } from 'phaser-node-framework';
 
 @injectable()
-export class PlayerComponent extends Component {
+export class PlayerNode extends Node {
   // The controls interface is explained in the 'Controls' section.
   constructor(@inject('example') private exampleService: ExampleServiceInterface) {
     exampleService.foo();
