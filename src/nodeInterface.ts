@@ -1,7 +1,7 @@
 import { Scene } from './scene';
 
 /**
- * Defined the interface required to make components work.
+ * Defined the interface required to make nodes work.
  */
 export interface NodeInterface {
   /**
@@ -26,6 +26,17 @@ export interface NodeInterface {
    * @param delta Frame delta in ms.
    */
   update(time: number, delta: number): void;
+
+  /**
+   * Removes all game objects from the display and update list, and turns
+   * off any events this node listens for. Called by `remove()` when a node
+   * is removed from the node tree.
+   *
+   * If you are implementing this method for a node, you must make sure it:
+   * * Removes all gameobjects from the scene.
+   * * Removes any event listeners added by this node.
+   */
+  destroy(): void;
 
   /**
    * Sets the phaser scene member.
@@ -53,7 +64,8 @@ export interface NodeInterface {
   getParent(): NodeInterface|null;
 
   /**
-   * Removes the node from the node tree, as well as all child nodes.
+   * Removes the node from the node tree, as well as all child nodes. If
+   * `this.destroy()` is implemented, this method will call it.
    */
   remove(): void;
 }

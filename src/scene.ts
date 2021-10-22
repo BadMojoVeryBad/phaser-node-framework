@@ -11,7 +11,7 @@ enum Hook {
 }
 
 /**
- * A Phaser scene extension that allows the use of components.
+ * A Phaser scene extension that allows the use of nodes.
  */
 export abstract class Scene extends Phaser.Scene implements NodeInterface {
   private nodes: Array<NodeInterface> = [];
@@ -52,7 +52,7 @@ export abstract class Scene extends Phaser.Scene implements NodeInterface {
   }
 
   /**
-   * Creates a node instance, but does no add it to the node tree.
+   * Creates a node instance, but does not add it to the node tree.
    *
    * @param key The key of the node to add.
    * @param data Any data to be passed to the node's `init()` method.
@@ -74,12 +74,6 @@ export abstract class Scene extends Phaser.Scene implements NodeInterface {
     return node;
   }
 
-  /**
-   * Adds a node to the scene.
-   *
-   * @param key The key of the node to add.
-   * @param data Any data to be passed to the node's `init()` method.
-   */
   public addNode(key: string, data?: Record<string, unknown>): void {
     const node = this.createNode(key, data);
 
@@ -88,7 +82,14 @@ export abstract class Scene extends Phaser.Scene implements NodeInterface {
   }
 
   /**
-   * Don't override this method. If you do, components will stop working!
+   * The scene's create method. If you override this method, be sure to call the
+   * `super()`:
+   *
+   * ```
+   * public create(): void {
+   *   super.create();
+   * }
+   * ```
    */
   public create(): void {
     for (const child of this.getChildren()) {
@@ -98,12 +99,23 @@ export abstract class Scene extends Phaser.Scene implements NodeInterface {
   }
 
   /**
-   * Don't override this method. If you do, components will stop working!
+   * The scene's update method. If you override this method, be sure to call the
+   * `super()`:
+   *
+   * ```
+   * public update(time: number, delta: number): void {
+   *   super.update(time: number, delta: number);
+   * }
+   * ```
    */
   public update(time: number, delta: number): void {
     for (const child of this.getChildren()) {
       this.updateNode(child, Hook.UPDATE, time, delta);
     }
+  }
+
+  public destroy(): void {
+    this.remove();
   }
 
   /**

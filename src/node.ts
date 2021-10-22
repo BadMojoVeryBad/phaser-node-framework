@@ -3,7 +3,7 @@ import { NodeInterface } from './nodeInterface';
 import { Scene } from './scene';
 
 /**
- * A component to be used in a Phaser game.
+ * A node to be used in a Phaser game.
  */
 @injectable()
 export abstract class Node implements NodeInterface {
@@ -20,6 +20,10 @@ export abstract class Node implements NodeInterface {
   }
 
   public update(time: number, delta: number): void { // eslint-disable-line @typescript-eslint/no-unused-vars
+    // To be overridden.
+  }
+
+  public destroy(): void {
     // To be overridden.
   }
 
@@ -41,6 +45,15 @@ export abstract class Node implements NodeInterface {
   }
 
   public remove(): void {
-    // To be overridden.
+    this.destroyChildren(this.getChildren());
+    this.destroy();
+    this.children = [];
+  }
+
+  private destroyChildren(nodes: Array<NodeInterface>) {
+    for (const node of nodes) {
+      this.destroyChildren(node.getChildren());
+      node.destroy();
+    }
   }
 }
