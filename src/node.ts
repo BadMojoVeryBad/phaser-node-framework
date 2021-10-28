@@ -19,6 +19,10 @@ export abstract class Node implements NodeInterface {
     // To be overridden.
   }
 
+  public created(): void {
+    // To be overridden.
+  }
+
   public update(time: number, delta: number): void { // eslint-disable-line @typescript-eslint/no-unused-vars
     // To be overridden.
   }

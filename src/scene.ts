@@ -2,12 +2,9 @@ import { Container } from 'inversify';
 import { NodeInterface } from './nodeInterface';
 
 enum Hook {
-  BEFORE_CREATE,
   CREATE,
-  AFTER_CREATE,
-  BEFORE_UPDATE,
+  CREATED,
   UPDATE,
-  AFTER_UPDATE,
 }
 
 /**
@@ -15,7 +12,7 @@ enum Hook {
  */
 export abstract class Scene extends Phaser.Scene implements NodeInterface {
   private nodes: Array<NodeInterface> = [];
-  private created = false;
+  private isSceneCreated = false;
 
   constructor(config: string | Phaser.Types.Scenes.SettingsConfig) {
     super(config);
@@ -34,6 +31,10 @@ export abstract class Scene extends Phaser.Scene implements NodeInterface {
   }
 
   public setScene(): void {
+    // ...
+  }
+
+  public created(): void {
     // ...
   }
 
@@ -67,7 +68,7 @@ export abstract class Scene extends Phaser.Scene implements NodeInterface {
     node.init(data);
 
     // Run creation hooks if the scene is already ceated.
-    if (this.created) {
+    if (this.isSceneCreated) {
       this.updateNode(node, Hook.CREATE);
     }
 
@@ -95,7 +96,12 @@ export abstract class Scene extends Phaser.Scene implements NodeInterface {
     for (const child of this.getChildren()) {
       this.updateNode(child, Hook.CREATE);
     }
-    this.created = true;
+
+    for (const child of this.getChildren()) {
+      this.updateNode(child, Hook.CREATED);
+    }
+
+    this.isSceneCreated = true;
   }
 
   /**
@@ -138,7 +144,7 @@ export abstract class Scene extends Phaser.Scene implements NodeInterface {
    * @returns
    */
   public isCreated(): boolean {
-    return this.created;
+    return this.isSceneCreated;
   }
 
   private updateNode(node: NodeInterface, hook: Hook, time = 0, delta = 0) {
@@ -149,6 +155,10 @@ export abstract class Scene extends Phaser.Scene implements NodeInterface {
 
     case Hook.UPDATE:
       node.update(time, delta);
+      break;
+
+    case Hook.CREATED:
+      node.created();
       break;
     }
 

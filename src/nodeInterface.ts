@@ -20,6 +20,13 @@ export interface NodeInterface {
   create(): void;
 
   /**
+   * Called after all nodes' `create()` method have been called. This is a
+   * good place to emit events that have been listened to in the `create()`
+   * method.
+   */
+  created(): void;
+
+  /**
    * Called during the scene's `update()` method.
    *
    * @param time Game time in ms.
