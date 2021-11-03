@@ -70,6 +70,7 @@ export abstract class Scene extends Phaser.Scene implements NodeInterface {
     // Run creation hooks if the scene is already ceated.
     if (this.isSceneCreated) {
       this.updateNode(node, Hook.CREATE);
+      this.updateNode(node, Hook.CREATED);
     }
 
     return node;
