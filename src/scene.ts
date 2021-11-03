@@ -13,6 +13,8 @@ enum Hook {
 export abstract class Scene extends Phaser.Scene implements NodeInterface {
   private nodes: Array<NodeInterface> = [];
   private isSceneCreated = false;
+  private hasCreateRun = false;
+  private hasCreatedRun = false;
 
   constructor(config: string | Phaser.Types.Scenes.SettingsConfig) {
     super(config);
@@ -68,8 +70,11 @@ export abstract class Scene extends Phaser.Scene implements NodeInterface {
     node.init(data);
 
     // Run creation hooks if the scene is already ceated.
-    if (this.isSceneCreated) {
+    if (this.isSceneCreated && this.hasCreateRun) {
       this.updateNode(node, Hook.CREATE);
+    }
+
+    if (this.isSceneCreated && this.hasCreatedRun) {
       this.updateNode(node, Hook.CREATED);
     }
 
@@ -94,15 +99,19 @@ export abstract class Scene extends Phaser.Scene implements NodeInterface {
    * ```
    */
   public create(): void {
+    this.isSceneCreated = true;
+
     for (const child of this.getChildren()) {
       this.updateNode(child, Hook.CREATE);
     }
+
+    this.hasCreateRun = true;
 
     for (const child of this.getChildren()) {
       this.updateNode(child, Hook.CREATED);
     }
 
-    this.isSceneCreated = true;
+    this.hasCreatedRun = true;
   }
 
   /**
