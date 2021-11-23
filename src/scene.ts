@@ -5,6 +5,7 @@ enum Hook {
   CREATE,
   CREATED,
   UPDATE,
+  DESTROY
 }
 
 /**
@@ -41,6 +42,9 @@ export abstract class Scene extends Phaser.Scene implements NodeInterface {
   }
 
   public remove(): void {
+    for (const child of this.getChildren()) {
+      this.updateNode(child, Hook.DESTROY);
+    }
     this.scene.stop();
   }
 
@@ -50,6 +54,9 @@ export abstract class Scene extends Phaser.Scene implements NodeInterface {
    * @param key The unique key of the scene to change to.
    */
   public changeScene(key: string): void {
+    for (const child of this.getChildren()) {
+      this.updateNode(child, Hook.DESTROY);
+    }
     this.nodes = [];
     this.scene.start(key);
   }
@@ -169,6 +176,10 @@ export abstract class Scene extends Phaser.Scene implements NodeInterface {
 
     case Hook.CREATED:
       node.created();
+      break;
+
+    case Hook.DESTROY:
+      node.destroy();
       break;
     }
 
