@@ -42,6 +42,9 @@ export abstract class Scene extends Phaser.Scene implements NodeInterface {
   }
 
   public remove(): void {
+    this.hasCreateRun = false;
+    this.hasCreatedRun = false;
+    this.isSceneCreated = false;
     for (const child of this.getChildren()) {
       this.updateNode(child, Hook.DESTROY);
     }
@@ -54,6 +57,9 @@ export abstract class Scene extends Phaser.Scene implements NodeInterface {
    * @param key The unique key of the scene to change to.
    */
   public changeScene(key: string): void {
+    this.hasCreateRun = false;
+    this.hasCreatedRun = false;
+    this.isSceneCreated = false;
     for (const child of this.getChildren()) {
       this.updateNode(child, Hook.DESTROY);
     }
