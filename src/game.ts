@@ -20,7 +20,7 @@ export class Game {
 
   private inputs: Record<string, string[]> = {};
 
-  private pipelines: Record<string, typeof Phaser.Renderer.WebGL.Pipelines.PostFXPipeline> = {};
+  private pipelines: Record<string, typeof Phaser.Renderer.WebGL.WebGLPipeline> = {};
 
   private config: Phaser.Types.Core.GameConfig;
 
@@ -194,7 +194,7 @@ export class Game {
    *
    * @param pipeline The pipeline.
    */
-  public registerPipeline(key: string, pipeline: typeof Phaser.Renderer.WebGL.Pipelines.PostFXPipeline): void {
+  public registerPipeline(key: string, pipeline: typeof Phaser.Renderer.WebGL.WebGLPipeline): void {
     this.validateKey(key, 'pipeline');
     this.pipelines[key] = pipeline;
   }
