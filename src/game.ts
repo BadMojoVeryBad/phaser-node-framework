@@ -20,6 +20,8 @@ export class Game {
 
   private inputs: Record<string, string[]> = {};
 
+  private pipelines: Array<typeof Phaser.Renderer.WebGL.Pipelines.PostFXPipeline> = [];
+
   private config: Phaser.Types.Core.GameConfig;
 
   private serviceContainer: Container;
@@ -188,6 +190,15 @@ export class Game {
   }
 
   /**
+   * Register a post fx pipeline to use in the game.
+   *
+   * @param pipeline The pipeline.
+   */
+  public registerPipeline(pipeline: typeof Phaser.Renderer.WebGL.Pipelines.PostFXPipeline): void {
+    this.pipelines.push(pipeline);
+  }
+
+  /**
    * Listens for inputs on a given control.
    *
    * The control string is arbitrary, and is cimply used to reference the inputs later,
@@ -267,6 +278,8 @@ export class Game {
     }
 
     // Create the game.
+    // @ts-ignore
+    this.config.pipeline = this.pipelines;
     this.phaser = new Phaser.Game(this.config);
 
     // Add all scenes.
