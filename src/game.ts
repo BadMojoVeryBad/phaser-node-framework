@@ -87,6 +87,10 @@ export class Game {
       backgroundColor: optionsMerged.backgroundColor,
       width: width,
       height: height,
+      scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH
+      },
       pixelArt: true,
       antialias: false,
       input: {
@@ -103,12 +107,12 @@ export class Game {
           debug: optionsMerged.debug
         },
       },
-      callbacks: {
-        postBoot: (game: any) => {
-          game.canvas.style.width = '100%';
-          game.canvas.style.height = '100%';
-        }
-      }
+      // callbacks: {
+      //   postBoot: (game: any) => {
+      //     game.canvas.style.width = '100%';
+      //     game.canvas.style.height = '100%';
+      //   }
+      // }
     };
 
     game.options = optionsMerged;
