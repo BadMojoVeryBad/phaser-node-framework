@@ -35,9 +35,10 @@ export abstract class Node implements NodeInterface {
     this.scene = scene;
   }
 
-  public addNode(key: string, data: Record<string, unknown>): void {
+  public addNode(key: string, data: Record<string, unknown>): NodeInterface {
     const component = this.scene.createNode(key, data);
     this.children.push(component);
+    return component;
   }
 
   public getParent(): NodeInterface {
